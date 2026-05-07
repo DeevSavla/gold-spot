@@ -142,6 +142,7 @@ class ChallengeSummary {
     required this.category,
     required this.duration,
     required this.description,
+    required this.creatorId,
     required this.joinCode,
     required this.participants,
   });
@@ -151,6 +152,7 @@ class ChallengeSummary {
   final String category;
   final int duration;
   final String description;
+  final String creatorId;
   final String joinCode;
   final List<String> participants;
 }

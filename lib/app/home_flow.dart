@@ -57,6 +57,7 @@ class _HomeFlowState extends State<HomeFlow> {
       category: data['category']?.toString() ?? '',
       duration: (data['duration'] as num?)?.toInt() ?? 0,
       description: data['description']?.toString() ?? '',
+      creatorId: data['creatorId']?.toString() ?? '',
       joinCode: data['joinCode']?.toString() ?? '',
       participants: ((data['participants'] as List?) ?? <dynamic>[])
           .map((dynamic value) => value.toString())
@@ -437,6 +438,13 @@ class _HomeFlowState extends State<HomeFlow> {
 
     final Map<String, dynamic> challenge =
         (response['challenge'] as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+    final ChallengeSummary createdChallenge = _challengeFromResponse(challenge);
+    setState(() {
+      challenges = <ChallengeSummary>[
+        createdChallenge,
+        ...challenges.where((ChallengeSummary item) => item.id != createdChallenge.id),
+      ];
+    });
     return challenge['joinCode']?.toString() ?? '';
   }
 
@@ -584,8 +592,12 @@ class _HomeFlowState extends State<HomeFlow> {
           user: user!,
           apiBaseUrl: _safeApiBaseUrl,
           apiService: _apiService,
+          challenges: challenges,
+          isChallengesLoading: isChallengesLoading,
+          onRefreshChallenges: _fetchChallenges,
           onCreateChallenge: () => setScreen(AppScreen.createChallenge),
-          onViewChallenge: () => viewChallenge('trainer-strength-14'),
+          onViewChallenge: viewChallenge,
+          onViewChallengeDetails: viewChallengeDetails,
         );
       case AppScreen.challengeUserProgress:
         return DetailScreen(
