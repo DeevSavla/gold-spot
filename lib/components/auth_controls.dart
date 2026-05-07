@@ -52,10 +52,12 @@ class _RoleSelectorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Ink(
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: selected ? _kineticNeon : _authPanel,
@@ -63,17 +65,35 @@ class _RoleSelectorButton extends StatelessWidget {
           border: Border.all(
             color: selected ? _kineticNeon : const Color.fromRGBO(215, 255, 0, 0.12),
           ),
+          boxShadow: selected
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: _kineticNeon.withValues(alpha: 0.25),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.black : AppPalette.mutedText,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              label == 'TRAINER' ? Icons.workspace_premium : Icons.person,
+              size: 17,
+              color: selected ? Colors.black : _kineticNeon,
             ),
-          ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.black : AppPalette.mutedText,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
         ),
       ),
     );

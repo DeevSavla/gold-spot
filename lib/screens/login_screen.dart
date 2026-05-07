@@ -118,9 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final EdgeInsets viewPadding = MediaQuery.of(context).viewPadding;
     final bool isTrainer = widget.initialRole == AuthRole.trainer;
-    final String subtitle = widget.initialRole == null
-        ? 'Welcome back'
-        : 'Sign in as ${isTrainer ? 'Trainer' : 'User'}';
     const Color accentColor = _kineticNeon;
 
     return DecoratedBox(
@@ -201,33 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     isTrainer ? Icons.workspace_premium : Icons.bolt,
                                     color: accentColor,
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        isTrainer ? 'TRAINER ACCESS' : 'ATHLETE ACCESS',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 1.7,
-                                          color: accentColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        subtitle,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                              color: Color(0xFFB8B8B8),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                )
                               ],
                             ),
                             const SizedBox(height: 24),
@@ -361,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextButton.icon(
                               onPressed: widget.onSignup,
                               icon: const Icon(Icons.person_add_alt_1, size: 18),
-                              label: Text('Create ${isTrainer ? 'Trainer' : 'User'} account'),
+                              label: Text('Create account'),
                               style: TextButton.styleFrom(
                                 foregroundColor: accentColor,
                                 textStyle: const TextStyle(

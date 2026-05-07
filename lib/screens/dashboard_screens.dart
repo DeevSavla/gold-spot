@@ -110,8 +110,6 @@ class TrainerDashboardScreen extends StatelessWidget {
             children: <Widget>[
               _DashboardHeroHeader(name: user.name),
               SizedBox(height: compact ? 22 : 26),
-              _TrainerCreateChallengeCard(onTap: onCreateChallenge),
-              SizedBox(height: compact ? 20 : 24),
               const _DashboardSectionTitle(title: 'YOUR CHALLENGES'),
               const SizedBox(height: 12),
               if (isChallengesLoading)
@@ -674,62 +672,6 @@ class _DashboardBodyCompositionCard extends StatelessWidget {
                     SizedBox(height: 6),
                     Text(
                       'Connect your scale and capture body metrics.',
-                      style: TextStyle(
-                        color: Color(0xFFA4A4A4),
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 10),
-              Icon(Icons.chevron_right_rounded, color: Color(0xFFB7FF00)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TrainerCreateChallengeCard extends StatelessWidget {
-  const _TrainerCreateChallengeCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1F1F1F),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: const Row(
-            children: <Widget>[
-              _DashboardActionIcon(icon: Icons.add_circle_outline_rounded),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'CREATE CHALLENGE',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Publish a new plan and share its join code.',
                       style: TextStyle(
                         color: Color(0xFFA4A4A4),
                         fontSize: 13,
