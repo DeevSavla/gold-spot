@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,23 +9,25 @@ import '../config/app_env.dart';
 class ApiService {
   ApiService({http.Client? client}) : _client = client ?? http.Client();
 
+  static const Duration _requestTimeout = Duration(seconds: 8);
+
   final http.Client _client;
   String? _authToken;
+  String? _resolvedBaseUrl;
+
+  String get currentBaseUrl => _resolvedBaseUrl ?? AppEnv.apiBaseUrl;
 
   void setAuthToken(String? token) {
     _authToken = token;
   }
 
-  Uri _uri(String path) {
-    final String normalizedBase = AppEnv.apiBaseUrl.replaceAll(RegExp(r'/$'), '');
-    final String normalizedPath = path.startsWith('/') ? path : '/$path';
-    return Uri.parse('$normalizedBase$normalizedPath');
-  }
-
   Future<Map<String, dynamic>> getJson(String path) async {
-    final http.Response response = await _client.get(
-      _uri(path),
-      headers: _headers(),
+    final http.Response response = await _sendWithBackendFallback(
+      path,
+      (Uri uri) => _client.get(
+        uri,
+        headers: _headers(),
+      ),
     );
     return _decodeResponse(response);
   }
@@ -33,10 +36,13 @@ class ApiService {
     String path, {
     Map<String, dynamic>? body,
   }) async {
-    final http.Response response = await _client.post(
-      _uri(path),
-      headers: _headers(contentType: 'application/json'),
-      body: jsonEncode(body ?? <String, dynamic>{}),
+    final http.Response response = await _sendWithBackendFallback(
+      path,
+      (Uri uri) => _client.post(
+        uri,
+        headers: _headers(contentType: 'application/json'),
+        body: jsonEncode(body ?? <String, dynamic>{}),
+      ),
     );
     return _decodeResponse(response);
   }
@@ -45,18 +51,24 @@ class ApiService {
     String path, {
     Map<String, dynamic>? body,
   }) async {
-    final http.Response response = await _client.patch(
-      _uri(path),
-      headers: _headers(contentType: 'application/json'),
-      body: jsonEncode(body ?? <String, dynamic>{}),
+    final http.Response response = await _sendWithBackendFallback(
+      path,
+      (Uri uri) => _client.patch(
+        uri,
+        headers: _headers(contentType: 'application/json'),
+        body: jsonEncode(body ?? <String, dynamic>{}),
+      ),
     );
     return _decodeResponse(response);
   }
 
   Future<Map<String, dynamic>> deleteJson(String path) async {
-    final http.Response response = await _client.delete(
-      _uri(path),
-      headers: _headers(),
+    final http.Response response = await _sendWithBackendFallback(
+      path,
+      (Uri uri) => _client.delete(
+        uri,
+        headers: _headers(),
+      ),
     );
     return _decodeResponse(response);
   }
@@ -66,27 +78,66 @@ class ApiService {
     Map<String, String>? fields,
     ApiMultipartFile? file,
   }) async {
-    final http.MultipartRequest request = http.MultipartRequest('POST', _uri(path));
+    final http.Response response = await _sendWithBackendFallback(path, (Uri uri) async {
+      final http.MultipartRequest request = http.MultipartRequest('POST', uri);
 
-    if (fields != null) {
-      request.fields.addAll(fields);
-    }
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
 
-    request.headers.addAll(_headers());
+      request.headers.addAll(_headers());
 
-    if (file != null) {
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          file.fieldName,
-          file.bytes,
-          filename: file.filename,
-        ),
-      );
-    }
+      if (file != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            file.fieldName,
+            file.bytes,
+            filename: file.filename,
+          ),
+        );
+      }
 
-    final http.StreamedResponse streamedResponse = await request.send();
-    final http.Response response = await http.Response.fromStream(streamedResponse);
+      final http.StreamedResponse streamedResponse =
+          await request.send().timeout(_requestTimeout);
+      return http.Response.fromStream(streamedResponse);
+    });
     return _decodeResponse(response);
+  }
+
+  Future<http.Response> _sendWithBackendFallback(
+    String path,
+    Future<http.Response> Function(Uri uri) send,
+  ) async {
+    final List<String> candidates = _candidateBaseUrls();
+    Object? lastError;
+
+    for (final String baseUrl in candidates) {
+      try {
+        final http.Response response =
+            await send(AppEnv.uriFor(baseUrl, path)).timeout(_requestTimeout);
+        _resolvedBaseUrl = baseUrl;
+        return response;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw BackendConnectionException(
+      attemptedBaseUrls: candidates,
+      cause: lastError,
+    );
+  }
+
+  List<String> _candidateBaseUrls() {
+    final List<String> configured = AppEnv.apiBaseUrlCandidates;
+    if (_resolvedBaseUrl == null) {
+      return configured;
+    }
+
+    return <String>[
+      _resolvedBaseUrl!,
+      ...configured.where((String url) => url != _resolvedBaseUrl),
+    ];
   }
 
   Map<String, dynamic> _decodeResponse(http.Response response) {
@@ -118,6 +169,24 @@ class ApiService {
     }
     return headers;
   }
+}
+
+class BackendConnectionException implements Exception {
+  BackendConnectionException({
+    required this.attemptedBaseUrls,
+    required this.cause,
+  });
+
+  final List<String> attemptedBaseUrls;
+  final Object? cause;
+
+  String get message {
+    final String urls = attemptedBaseUrls.join(', ');
+    return 'Unable to reach the backend. Tried: $urls';
+  }
+
+  @override
+  String toString() => 'BackendConnectionException($attemptedBaseUrls): $cause';
 }
 
 class ApiException implements Exception {

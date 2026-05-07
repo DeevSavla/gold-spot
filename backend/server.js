@@ -11,8 +11,23 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use((req, _res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -36,8 +51,11 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URL);
     console.log('Connected to MongoDB');
 
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server running on http://${HOST}:${PORT}`);
+      if (process.env.API_BASE_URL) {
+        console.log(`Advertised API base URL: ${process.env.API_BASE_URL}`);
+      }
     });
   } catch (err) {
     console.error('Mongo connection failed:', err);

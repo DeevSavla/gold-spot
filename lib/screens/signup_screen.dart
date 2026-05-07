@@ -225,10 +225,16 @@ class _SignupScreenState extends State<SignupScreen> {
           _errorText = error.message;
         });
       }
-    } catch (_) {
+    } on BackendConnectionException catch (error) {
       if (mounted) {
         setState(() {
-          _errorText = 'Unable to reach the backend. Check that the server is running.';
+          _errorText = error.message;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorText = 'Signup failed unexpectedly: $error';
         });
       }
     } finally {
@@ -273,33 +279,53 @@ class _SignupScreenState extends State<SignupScreen> {
     final EdgeInsets viewPadding = MediaQuery.of(context).viewPadding;
     final List<String> focusOptions = <String>['endurance', 'strength', 'mobility', 'nutrition'];
 
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final bool isTablet = constraints.maxWidth >= 720;
-        final double maxWidth = isTablet ? 620 : constraints.maxWidth;
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Colors.black,
+            _authBlack,
+            Colors.black,
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool isTablet = constraints.maxWidth >= 720;
+          final double maxWidth = isTablet ? 620 : constraints.maxWidth;
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20, viewPadding.top + 20, 20, viewPadding.bottom + 40),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20, viewPadding.top + 20, 20, viewPadding.bottom + 40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      IconButton(
-                        onPressed: _goBack,
-                        icon: const Icon(Icons.arrow_back),
-                        color: const Color.fromRGBO(255, 255, 255, 0.8),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: _authPanel,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color.fromRGBO(215, 255, 0, 0.18)),
+                        ),
+                        child: IconButton(
+                          onPressed: _goBack,
+                          icon: const Icon(Icons.arrow_back),
+                          color: AppPalette.text,
+                          tooltip: 'Back',
+                        ),
                       ),
                       Text(
                         'STEP ${_step + 1} OF 3',
                         style: const TextStyle(
-                          color: AppPalette.mutedText,
+                          color: _kineticNeon,
                           fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 1.6,
                         ),
                       ),
@@ -313,8 +339,16 @@ class _SignupScreenState extends State<SignupScreen> {
                           margin: EdgeInsets.only(right: index == 2 ? 0 : 8),
                           height: 6,
                           decoration: BoxDecoration(
-                            color: index <= _step ? AppPalette.primary : AppPalette.surfaceAlt,
+                            color: index <= _step ? _kineticNeon : _authPanel,
                             borderRadius: BorderRadius.circular(999),
+                            boxShadow: index <= _step
+                                ? <BoxShadow>[
+                                    BoxShadow(
+                                      color: _kineticNeon.withValues(alpha: 0.28),
+                                      blurRadius: 16,
+                                    ),
+                                  ]
+                                : null,
                           ),
                         ),
                       );
@@ -324,9 +358,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: AppPalette.surface,
+                      color: _authPanelDark,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppPalette.border),
+                      border: Border.all(color: _kineticNeon.withValues(alpha: 0.48)),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: _kineticNeon.withValues(alpha: 0.18),
+                          blurRadius: 34,
+                          offset: const Offset(0, 18),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +375,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         const Text(
                           'CREATE YOUR ACCOUNT',
                           style: TextStyle(
-                            color: AppPalette.primary,
+                            color: _kineticNeon,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.8,
@@ -362,7 +403,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ? 'We will use these details to personalize your profile.'
                               : 'Pick your focus, weekly commitment, and optional profile photo.',
                           style: const TextStyle(
-                            color: AppPalette.mutedText,
+                            color: Color(0xFFB8B8B8),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             height: 1.6,
@@ -449,7 +490,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
-                        color: AppPalette.mutedText,
+                        color: _kineticNeon,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -459,9 +500,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Ink(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
-                          color: AppPalette.surfaceAlt,
+                          color: _authPanel,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppPalette.border),
+                          border: Border.all(color: const Color.fromRGBO(215, 255, 0, 0.12)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -474,7 +515,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const Icon(Icons.calendar_month, color: AppPalette.primary),
+                            const Icon(Icons.calendar_month, color: _kineticNeon),
                           ],
                         ),
                       ),
@@ -487,7 +528,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
-                        color: AppPalette.mutedText,
+                        color: _kineticNeon,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -502,10 +543,10 @@ class _SignupScreenState extends State<SignupScreen> {
                             width: isTablet ? 286 : (maxWidth - 50) / 2,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             decoration: BoxDecoration(
-                              color: selected ? AppPalette.primary : AppPalette.surfaceAlt,
+                              color: selected ? _kineticNeon : _authPanel,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: selected ? AppPalette.primary : AppPalette.border,
+                                color: selected ? _kineticNeon : const Color.fromRGBO(215, 255, 0, 0.12),
                               ),
                             ),
                             child: Center(
@@ -530,7 +571,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
-                        color: AppPalette.mutedText,
+                        color: _kineticNeon,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -546,10 +587,10 @@ class _SignupScreenState extends State<SignupScreen> {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: selected ? AppPalette.primary : AppPalette.surfaceAlt,
+                              color: selected ? _kineticNeon : _authPanel,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: selected ? AppPalette.primary : AppPalette.border,
+                                color: selected ? _kineticNeon : const Color.fromRGBO(215, 255, 0, 0.12),
                               ),
                             ),
                             alignment: Alignment.center,
@@ -578,7 +619,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
-                        color: AppPalette.mutedText,
+                        color: _kineticNeon,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -588,19 +629,19 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Ink(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppPalette.surfaceAlt,
+                          color: _authPanel,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppPalette.border),
+                          border: Border.all(color: const Color.fromRGBO(215, 255, 0, 0.12)),
                         ),
                         child: Row(
                           children: <Widget>[
                             CircleAvatar(
                               radius: 28,
-                              backgroundColor: AppPalette.primary.withValues(alpha: 0.2),
+                              backgroundColor: _kineticNeon.withValues(alpha: 0.18),
                               backgroundImage:
                                   _profileImage == null ? null : MemoryImage(_profileImage!.bytes),
                               child: _profileImage == null
-                                  ? const Icon(Icons.person, color: AppPalette.primary)
+                                  ? const Icon(Icons.person, color: _kineticNeon)
                                   : null,
                             ),
                             const SizedBox(width: 14),
@@ -623,27 +664,58 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                   if (_errorText != null) ...<Widget>[
                     const SizedBox(height: 14),
-                    Text(
-                      _errorText!,
-                      style: const TextStyle(
-                        color: AppPalette.danger,
-                        fontWeight: FontWeight.w700,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppPalette.danger.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppPalette.danger.withValues(alpha: 0.35)),
                       ),
-                      textAlign: TextAlign.center,
+                      child: Text(
+                        _errorText!,
+                        style: const TextStyle(
+                          color: AppPalette.danger,
+                          fontWeight: FontWeight.w800,
+                          height: 1.35,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 18),
-                  _PrimaryButton(
-                    label: _step < 2
-                        ? 'NEXT'
-                        : _submitting
-                        ? 'CREATING ACCOUNT...'
-                        : 'CREATE ACCOUNT',
-                    onTap: _submitting
-                        ? () {}
-                        : _step < 2
-                        ? _openNextStep
-                        : _submitSignup,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _submitting
+                          ? null
+                          : _step < 2
+                          ? _openNextStep
+                          : _submitSignup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _kineticNeon,
+                        foregroundColor: Colors.black,
+                        disabledBackgroundColor: _kineticNeon.withValues(alpha: 0.45),
+                        padding: const EdgeInsets.symmetric(vertical: 17),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        _step < 2
+                            ? 'NEXT'
+                            : _submitting
+                            ? 'CREATING ACCOUNT...'
+                            : 'CREATE ACCOUNT',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 14),
                   Row(
@@ -664,7 +736,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
-                            color: AppPalette.primary,
+                            color: _kineticNeon,
                           ),
                         ),
                       ),
@@ -672,10 +744,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ],
               ),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

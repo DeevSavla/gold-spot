@@ -19,17 +19,17 @@ class _RoleChip extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: selected ? AppPalette.primary.withValues(alpha: 0.16) : AppPalette.surfaceAlt,
+          color: selected ? _kineticNeon.withValues(alpha: 0.16) : _authPanel,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? AppPalette.primary : AppPalette.border,
+            color: selected ? _kineticNeon : const Color.fromRGBO(215, 255, 0, 0.12),
           ),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? AppPalette.primary : AppPalette.text,
+              color: selected ? _kineticNeon : AppPalette.text,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -58,10 +58,10 @@ class _RoleSelectorButton extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? AppPalette.primary : AppPalette.surfaceAlt,
+          color: selected ? _kineticNeon : _authPanel,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppPalette.primary : AppPalette.border,
+            color: selected ? _kineticNeon : const Color.fromRGBO(215, 255, 0, 0.12),
           ),
         ),
         child: Center(

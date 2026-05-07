@@ -620,7 +620,7 @@ class _HomeFlowState extends State<HomeFlow> {
   }
 
   String get _safeApiBaseUrl {
-    return AppEnv.apiBaseUrl;
+    return _apiService.currentBaseUrl;
   }
 
   @override

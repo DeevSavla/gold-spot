@@ -1121,7 +1121,7 @@ class _BackendHealthCardState extends State<BackendHealthCard> {
   Future<void> _checkBackend() async {
     setState(() {
       _isChecking = true;
-      _message = 'Checking ${AppEnv.apiBaseUrl}/health ...';
+      _message = 'Checking ${widget.apiService.currentBaseUrl}/health ...';
     });
 
     try {
@@ -1130,7 +1130,7 @@ class _BackendHealthCardState extends State<BackendHealthCard> {
         _isSuccess = true;
         _message = response['message']?.toString() ??
             response['status']?.toString() ??
-            'Backend responded successfully.';
+            'Backend responded successfully at ${widget.apiService.currentBaseUrl}.';
       });
     } catch (error) {
       setState(() {

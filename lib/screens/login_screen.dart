@@ -1,5 +1,10 @@
 part of '../main.dart';
 
+const Color _kineticNeon = Color(0xFFD7FF00);
+const Color _authBlack = Color(0xFF080808);
+const Color _authPanel = Color(0xFF1F1F1F);
+const Color _authPanelDark = Color(0xFF141414);
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     super.key,
@@ -88,10 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
           _errorText = error.message;
         });
       }
-    } catch (_) {
+    } on BackendConnectionException catch (error) {
       if (mounted) {
         setState(() {
-          _errorText = 'Unable to reach the backend. Check that the server is running.';
+          _errorText = error.message;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorText = 'Login failed unexpectedly: $error';
         });
       }
     } finally {
@@ -110,167 +121,265 @@ class _LoginScreenState extends State<LoginScreen> {
     final String subtitle = widget.initialRole == null
         ? 'Welcome back'
         : 'Sign in as ${isTrainer ? 'Trainer' : 'User'}';
+    const Color accentColor = _kineticNeon;
 
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          final bool isTablet = constraints.maxWidth >= 700;
-          final double horizontalPadding = isTablet ? 32 : 20;
-          final double contentWidth = isTablet ? 560 : constraints.maxWidth;
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Colors.black,
+            _authBlack,
+            Colors.black,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final bool isTablet = constraints.maxWidth >= 700;
+            final double horizontalPadding = isTablet ? 32 : 20;
+            final double contentWidth = isTablet ? 560 : constraints.maxWidth;
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              viewPadding.top + 20,
-              horizontalPadding,
-              viewPadding.bottom + 40,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: contentWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        IconButton(
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                viewPadding.top + 20,
+                horizontalPadding,
+                viewPadding.bottom + 40,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: _authPanel,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color.fromRGBO(215, 255, 0, 0.18)),
+                        ),
+                        child: IconButton(
                           onPressed: widget.onBack,
                           icon: const Icon(Icons.arrow_back),
-                          color: const Color.fromRGBO(255, 255, 255, 0.8),
-                        ),
-                        const SizedBox(width: 24),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'LOGIN',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
-                        color: AppPalette.text,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppPalette.mutedText,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    _AuthField(
-                      label: 'EMAIL',
-                      controller: _emailController,
-                      hintText: 'you@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 18),
-                    _AuthField(
-                      label: 'PASSWORD',
-                      controller: _passwordController,
-                      hintText: '••••••••',
-                      obscureText: true,
-                    ),
-                    if (_errorText != null) ...<Widget>[
-                      const SizedBox(height: 14),
-                      Text(
-                        _errorText!,
-                        style: const TextStyle(
-                          color: AppPalette.danger,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submitting ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppPalette.primary,
-                          foregroundColor: Colors.black,
-                          disabledBackgroundColor: AppPalette.primary.withValues(alpha: 0.5),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          _submitting ? 'LOGGING IN...' : 'LOGIN',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
+                          color: AppPalette.text,
+                          tooltip: 'Back',
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        const Text(
-                          'Don\'t have an account?',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppPalette.mutedText,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: widget.onSignup,
-                          child: const Text(
-                            'Sign up',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: AppPalette.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    InkWell(
-                      onTap: widget.onSignup,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Ink(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      const SizedBox(height: 26),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
-                          color: const Color.fromRGBO(255, 255, 255, 0.04),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.06)),
+                          color: _authPanelDark,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: accentColor.withValues(alpha: 0.48)),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.2),
+                              blurRadius: 34,
+                              offset: const Offset(0, 18),
+                            ),
+                          ],
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                              'Create ${isTrainer ? 'Trainer' : 'User'} account',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
+                            Row(
+                              children: <Widget>[
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: accentColor.withValues(alpha: 0.4)),
+                                  ),
+                                  child: Icon(
+                                    isTrainer ? Icons.workspace_premium : Icons.bolt,
+                                    color: accentColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        isTrainer ? 'TRAINER ACCESS' : 'ATHLETE ACCESS',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1.7,
+                                          color: accentColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        subtitle,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                              color: Color(0xFFB8B8B8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'LOGIN',
+                              style: TextStyle(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0,
+                                color: AppPalette.text,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Enter your credentials to continue your training flow.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.5,
                                 color: AppPalette.mutedText,
                               ),
                             ),
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Color.fromRGBO(209, 252, 0, 0.9),
+                            const SizedBox(height: 28),
+                            _AuthField(
+                              label: 'EMAIL',
+                              controller: _emailController,
+                              hintText: 'you@example.com',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 18),
+                            _AuthField(
+                              label: 'PASSWORD',
+                              controller: _passwordController,
+                              hintText: 'Password',
+                              obscureText: true,
+                            ),
+                            if (_errorText != null) ...<Widget>[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppPalette.danger.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppPalette.danger.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                                child: Text(
+                                  _errorText!,
+                                  style: const TextStyle(
+                                    color: AppPalette.danger,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.35,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 22),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _submitting ? null : _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: accentColor,
+                                  foregroundColor: Colors.black,
+                                  disabledBackgroundColor: accentColor.withValues(alpha: 0.45),
+                                  padding: const EdgeInsets.symmetric(vertical: 17),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    if (_submitting) ...<Widget>[
+                                      const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                    ],
+                                    Text(
+                                      _submitting ? 'LOGGING IN' : 'LOGIN',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.4,
+                                      ),
+                                    ),
+                                    if (!_submitting) ...<Widget>[
+                                      const SizedBox(width: 10),
+                                      const Icon(Icons.arrow_forward, size: 18),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 18),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: _authPanel,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color.fromRGBO(215, 255, 0, 0.12)),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            const Expanded(
+                              child: Text(
+                                'New here?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppPalette.mutedText,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: widget.onSignup,
+                              icon: const Icon(Icons.person_add_alt_1, size: 18),
+                              label: Text('Create ${isTrainer ? 'Trainer' : 'User'} account'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: accentColor,
+                                textStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -306,9 +415,9 @@ class _AuthField extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-            color: AppPalette.mutedText,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.4,
+            color: _kineticNeon,
           ),
         ),
         const SizedBox(height: 8),
@@ -321,25 +430,33 @@ class _AuthField extends StatelessWidget {
           maxLines: obscureText ? 1 : maxLines,
           minLines: maxLines > 1 ? maxLines : 1,
           onChanged: (_) => onChanged?.call(),
+          cursorColor: _kineticNeon,
           style: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             color: AppPalette.text,
           ),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: const TextStyle(color: Color.fromRGBO(173, 170, 170, 0.45)),
+            hintStyle: const TextStyle(
+              color: Color.fromRGBO(154, 166, 187, 0.48),
+              fontWeight: FontWeight.w700,
+            ),
             filled: true,
-            fillColor: AppPalette.surfaceAlt,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            fillColor: _authPanel,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             suffixIcon: suffixIcon,
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color.fromRGBO(255, 255, 255, 0.08)),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color.fromRGBO(255, 255, 255, 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppPalette.primary),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: _kineticNeon, width: 1.4),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppPalette.danger),
             ),
           ),
         ),
@@ -347,4 +464,3 @@ class _AuthField extends StatelessWidget {
     );
   }
 }
-
