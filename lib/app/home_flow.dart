@@ -500,6 +500,38 @@ class _HomeFlowState extends State<HomeFlow> {
     );
   }
 
+  Future<Map<String, dynamic>?> _loadPreviousBodyMetrics() async {
+    if (user == null || activeChallengeId == null || activeChallengeId!.isEmpty) {
+      return null;
+    }
+
+    final String query = Uri(
+      queryParameters: <String, String>{
+        'challengeId': activeChallengeId!,
+        'userId': user!.id,
+      },
+    ).query;
+    final Map<String, dynamic> response = await _apiService.getJson('/challenge-progress?$query');
+    final List<dynamic> progress = (response['progress'] as List?) ?? <dynamic>[];
+
+    for (final dynamic item in progress) {
+      if (item is! Map) {
+        continue;
+      }
+
+      final Map<String, dynamic> bodyMetrics =
+          (item['bodyMetrics'] as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+      final bool hasSavedMetric = bodyMetrics.values.any((dynamic value) => value != null);
+      if (hasSavedMetric) {
+        return bodyMetrics;
+      }
+    }
+
+    return <String, dynamic>{
+      if (user!.weight != null) 'weight': user!.weight,
+    };
+  }
+
   String _formatApiDate(DateTime value) {
     final String month = value.month.toString().padLeft(2, '0');
     final String day = value.day.toString().padLeft(2, '0');
@@ -637,6 +669,7 @@ class _HomeFlowState extends State<HomeFlow> {
           healthService: _healthService,
           onBack: () => viewChallengeDetails(activeChallengeId ?? 'mobility-21'),
           onSubmit: _saveDailyProgress,
+          onLoadPreviousBodyMetrics: _loadPreviousBodyMetrics,
         );
       case AppScreen.trainerDashboard:
         return TrainerDashboardScreen(

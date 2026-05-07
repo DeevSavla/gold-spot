@@ -625,6 +625,7 @@ class DailyCheckinScreen extends StatefulWidget {
     required this.healthService,
     required this.onBack,
     required this.onSubmit,
+    this.onLoadPreviousBodyMetrics,
   });
 
   final ChallengeSummary? challenge;
@@ -632,6 +633,7 @@ class DailyCheckinScreen extends StatefulWidget {
   final HealthService healthService;
   final VoidCallback onBack;
   final Future<void> Function(DailyProgressPayload payload) onSubmit;
+  final Future<Map<String, dynamic>?> Function()? onLoadPreviousBodyMetrics;
 
   @override
   State<DailyCheckinScreen> createState() => _DailyCheckinScreenState();
@@ -657,6 +659,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
 
   int _exertion = 3;
   bool _loadingSteps = false;
+  bool _loadingBodyMetrics = false;
   bool _submitting = false;
   String? _message;
 
@@ -664,6 +667,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
   void initState() {
     super.initState();
     _loadTodaySteps();
+    _loadPreviousBodyMetrics();
   }
 
   @override
@@ -722,6 +726,62 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadPreviousBodyMetrics() async {
+    final Future<Map<String, dynamic>?> Function()? loader = widget.onLoadPreviousBodyMetrics;
+    if (loader == null) {
+      return;
+    }
+
+    setState(() {
+      _loadingBodyMetrics = true;
+    });
+
+    try {
+      final Map<String, dynamic>? bodyMetrics = await loader();
+      if (!mounted || bodyMetrics == null) {
+        return;
+      }
+
+      setState(() {
+        _fillMetric(_weightController, bodyMetrics['weight']);
+        _fillMetric(_bmiController, bodyMetrics['bmi']);
+        _fillMetric(_bodyFatController, bodyMetrics['bodyFat']);
+        _fillMetric(_subcutaneousFatController, bodyMetrics['subcutaneousFat']);
+        _fillMetric(_visceralFatController, bodyMetrics['visceralFat']);
+        _fillMetric(_muscleMassController, bodyMetrics['muscleMass']);
+        _fillMetric(_skeletalMuscleController, bodyMetrics['skeletalMuscle']);
+        _fillMetric(_muscleRateController, bodyMetrics['muscleRate']);
+        _fillMetric(_waterController, bodyMetrics['waterContent']);
+        _fillMetric(_proteinController, bodyMetrics['protein']);
+        _fillMetric(_bmrController, bodyMetrics['bmr'], decimals: 0);
+        _fillMetric(_boneMassController, bodyMetrics['boneMass']);
+        _fillMetric(_physicalAgeController, bodyMetrics['physicalAge'], decimals: 0);
+        _fillMetric(_bodyScoreController, bodyMetrics['bodyScore']);
+      });
+    } catch (_) {
+      // Keep the form usable even if previous metrics cannot be reached.
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingBodyMetrics = false;
+        });
+      }
+    }
+  }
+
+  void _fillMetric(TextEditingController controller, dynamic value, {int decimals = 1}) {
+    if (controller.text.trim().isNotEmpty || value == null) {
+      return;
+    }
+
+    final double? parsed = value is num ? value.toDouble() : double.tryParse(value.toString());
+    if (parsed == null) {
+      return;
+    }
+
+    controller.text = decimals == 0 ? parsed.round().toString() : parsed.toStringAsFixed(decimals);
   }
 
   Future<void> _submit() async {
@@ -871,6 +931,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                   label: 'STEPS',
                   controller: _stepsController,
                   keyboardType: TextInputType.number,
+                  icon: Icons.directions_walk_rounded,
                   suffix: _loadingSteps
                       ? const SizedBox(
                           width: 18,
@@ -916,26 +977,88 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                _DailyMetricField(label: 'WEIGHT KG', controller: _weightController),
-                _DailyMetricField(label: 'BMI', controller: _bmiController),
-                _DailyMetricField(label: 'BODY FAT %', controller: _bodyFatController),
-                _DailyMetricField(
-                  label: 'SUBCUTANEOUS FAT %',
-                  controller: _subcutaneousFatController,
+                if (_loadingBodyMetrics) ...<Widget>[
+                  const LinearProgressIndicator(
+                    color: Color(0xFFB7FF00),
+                    backgroundColor: Color(0xFF2A2A2A),
+                    minHeight: 3,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                _BodyMetricsGrid(
+                  fields: <_BodyMetricFieldData>[
+                    _BodyMetricFieldData(
+                      label: 'WEIGHT KG',
+                      controller: _weightController,
+                      icon: Icons.monitor_weight_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'BMI',
+                      controller: _bmiController,
+                      icon: Icons.speed_rounded,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'BODY FAT %',
+                      controller: _bodyFatController,
+                      icon: Icons.pie_chart_outline_rounded,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'SUBCUT FAT %',
+                      controller: _subcutaneousFatController,
+                      icon: Icons.layers_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'VISCERAL FAT',
+                      controller: _visceralFatController,
+                      icon: Icons.health_and_safety_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'MUSCLE MASS',
+                      controller: _muscleMassController,
+                      icon: Icons.fitness_center_rounded,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'SKELETAL %',
+                      controller: _skeletalMuscleController,
+                      icon: Icons.accessibility_new_rounded,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'MUSCLE %',
+                      controller: _muscleRateController,
+                      icon: Icons.trending_up_rounded,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'WATER %',
+                      controller: _waterController,
+                      icon: Icons.water_drop_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'PROTEIN %',
+                      controller: _proteinController,
+                      icon: Icons.egg_alt_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'BMR KCAL',
+                      controller: _bmrController,
+                      icon: Icons.local_fire_department_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'BONE KG',
+                      controller: _boneMassController,
+                      icon: Icons.medical_information_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'AGE',
+                      controller: _physicalAgeController,
+                      icon: Icons.cake_outlined,
+                    ),
+                    _BodyMetricFieldData(
+                      label: 'SCORE',
+                      controller: _bodyScoreController,
+                      icon: Icons.stars_rounded,
+                    ),
+                  ],
                 ),
-                _DailyMetricField(label: 'VISCERAL FAT', controller: _visceralFatController),
-                _DailyMetricField(label: 'MUSCLE MASS', controller: _muscleMassController),
-                _DailyMetricField(
-                  label: 'SKELETAL MUSCLE %',
-                  controller: _skeletalMuscleController,
-                ),
-                _DailyMetricField(label: 'MUSCLE RATE %', controller: _muscleRateController),
-                _DailyMetricField(label: 'WATER %', controller: _waterController),
-                _DailyMetricField(label: 'PROTEIN %', controller: _proteinController),
-                _DailyMetricField(label: 'BMR KCAL', controller: _bmrController),
-                _DailyMetricField(label: 'BONE MASS KG', controller: _boneMassController),
-                _DailyMetricField(label: 'PHYSICAL AGE', controller: _physicalAgeController),
-                _DailyMetricField(label: 'BODY SCORE', controller: _bodyScoreController),
               ],
             ),
             const SizedBox(height: 18),
@@ -961,6 +1084,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                   controller: _notesController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
+                  icon: Icons.notes_rounded,
                 ),
               ],
             ),
@@ -1024,25 +1148,77 @@ class _DailyCheckinPanel extends StatelessWidget {
   }
 }
 
+class _BodyMetricsGrid extends StatelessWidget {
+  const _BodyMetricsGrid({required this.fields});
+
+  final List<_BodyMetricFieldData> fields;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool compact = constraints.maxWidth < 340;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: fields.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: compact ? 8 : 10,
+            mainAxisSpacing: compact ? 10 : 12,
+            childAspectRatio: compact ? 2.05 : 2.28,
+          ),
+          itemBuilder: (BuildContext context, int index) {
+            final _BodyMetricFieldData field = fields[index];
+            return _DailyMetricField(
+              label: field.label,
+              controller: field.controller,
+              icon: field.icon,
+              bottomPadding: 0,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _BodyMetricFieldData {
+  const _BodyMetricFieldData({
+    required this.label,
+    required this.controller,
+    required this.icon,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final IconData icon;
+}
+
 class _DailyMetricField extends StatelessWidget {
   const _DailyMetricField({
     required this.label,
     required this.controller,
     this.keyboardType = const TextInputType.numberWithOptions(decimal: true),
     this.maxLines = 1,
+    this.icon,
     this.suffix,
+    this.bottomPadding = 12,
   });
 
   final String label;
   final TextEditingController controller;
   final TextInputType keyboardType;
   final int maxLines;
+  final IconData? icon;
   final Widget? suffix;
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: bottomPadding),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
@@ -1058,6 +1234,17 @@ class _DailyMetricField extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1,
+          ),
+          prefixIcon: icon == null
+              ? null
+              : Icon(
+                  icon,
+                  color: const Color(0xFFB7FF00),
+                  size: 20,
+                ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 46,
+            minHeight: 46,
           ),
           suffixIcon: suffix,
           filled: true,
