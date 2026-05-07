@@ -134,6 +134,54 @@ class CreateChallengePayload {
   final String description;
 }
 
+class DailyProgressPayload {
+  const DailyProgressPayload({
+    required this.logDate,
+    required this.steps,
+    required this.distanceKm,
+    required this.calories,
+    required this.durationMinutes,
+    required this.activeMinutes,
+    required this.exertion,
+    required this.notes,
+    this.weight,
+    this.bmi,
+    this.bodyFat,
+    this.muscleMass,
+    this.waterContent,
+  });
+
+  final DateTime logDate;
+  final int steps;
+  final double distanceKm;
+  final int calories;
+  final int durationMinutes;
+  final int activeMinutes;
+  final int exertion;
+  final String notes;
+  final double? weight;
+  final double? bmi;
+  final double? bodyFat;
+  final double? muscleMass;
+  final double? waterContent;
+}
+
+class BodyCompositionReading {
+  const BodyCompositionReading({
+    required this.weight,
+    required this.bmi,
+    required this.bodyFat,
+    required this.muscleMass,
+    required this.waterContent,
+  });
+
+  final double weight;
+  final double bmi;
+  final double bodyFat;
+  final double muscleMass;
+  final double waterContent;
+}
+
 class ChallengeSummary {
   const ChallengeSummary({
     required this.id,

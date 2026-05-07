@@ -45,9 +45,22 @@ export function serializeChallengeProgress(progress) {
     challengeId: progress.challengeId,
     userId: progress.userId,
     logDate: progress.logDate,
-    distanceKm: progress.distanceKm,
-    durationMinutes: progress.durationMinutes,
+    activity: {
+      steps: progress.activity?.steps ?? 0,
+      distanceKm: progress.activity?.distanceKm ?? 0,
+      calories: progress.activity?.calories ?? 0,
+      durationMinutes: progress.activity?.durationMinutes ?? 0,
+      activeMinutes: progress.activity?.activeMinutes ?? 0,
+    },
+    bodyMetrics: {
+      weight: progress.bodyMetrics?.weight ?? null,
+      bmi: progress.bodyMetrics?.bmi ?? null,
+      bodyFat: progress.bodyMetrics?.bodyFat ?? null,
+      muscleMass: progress.bodyMetrics?.muscleMass ?? null,
+      waterContent: progress.bodyMetrics?.waterContent ?? null,
+    },
     exertion: progress.exertion,
     notes: progress.notes,
+    source: progress.source,
   };
 }

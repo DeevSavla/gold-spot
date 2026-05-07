@@ -462,6 +462,45 @@ class _HomeFlowState extends State<HomeFlow> {
     return challenge['joinCode']?.toString() ?? '';
   }
 
+  Future<void> _saveDailyProgress(DailyProgressPayload payload) async {
+    if (user == null) {
+      throw StateError('No authenticated user found.');
+    }
+    if (activeChallengeId == null || activeChallengeId!.isEmpty) {
+      throw StateError('No active challenge selected.');
+    }
+
+    final String logDate = _formatApiDate(payload.logDate);
+    await _apiService.patchJson(
+      '/challenge-progress/$activeChallengeId/${user!.id}/$logDate',
+      body: <String, dynamic>{
+        'activity': <String, dynamic>{
+          'steps': payload.steps,
+          'distanceKm': payload.distanceKm,
+          'calories': payload.calories,
+          'durationMinutes': payload.durationMinutes,
+          'activeMinutes': payload.activeMinutes,
+        },
+        'bodyMetrics': <String, dynamic>{
+          if (payload.weight != null) 'weight': payload.weight,
+          if (payload.bmi != null) 'bmi': payload.bmi,
+          if (payload.bodyFat != null) 'bodyFat': payload.bodyFat,
+          if (payload.muscleMass != null) 'muscleMass': payload.muscleMass,
+          if (payload.waterContent != null) 'waterContent': payload.waterContent,
+        },
+        'exertion': payload.exertion,
+        'notes': payload.notes,
+        'source': 'manual',
+      },
+    );
+  }
+
+  String _formatApiDate(DateTime value) {
+    final String month = value.month.toString().padLeft(2, '0');
+    final String day = value.day.toString().padLeft(2, '0');
+    return '${value.year}-$month-$day';
+  }
+
   ChallengeSummary? get activeChallenge {
     for (final ChallengeSummary challenge in challenges) {
       if (challenge.id == activeChallengeId) {
@@ -587,11 +626,12 @@ class _HomeFlowState extends State<HomeFlow> {
           onDone: () => setScreen(AppScreen.trainerDashboard),
         );
       case AppScreen.dailyCheckin:
-        return DetailScreen(
-          title: 'Daily Check-in',
-          subtitle: 'Log today\'s effort, add notes, and mark your streak progress.',
-          actionLabel: 'Return to Challenge',
-          onAction: () => viewChallengeDetails(activeChallengeId ?? 'mobility-21'),
+        return DailyCheckinScreen(
+          challenge: activeChallenge,
+          user: user!,
+          healthService: _healthService,
+          onBack: () => viewChallengeDetails(activeChallengeId ?? 'mobility-21'),
+          onSubmit: _saveDailyProgress,
         );
       case AppScreen.trainerDashboard:
         return TrainerDashboardScreen(

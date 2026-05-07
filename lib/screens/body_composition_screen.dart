@@ -5,10 +5,12 @@ class BodyCompositionScreen extends StatefulWidget {
     super.key,
     required this.user,
     required this.onBack,
+    this.onReadingCaptured,
   });
 
   final AuthUser user;
   final VoidCallback onBack;
+  final ValueChanged<BodyCompositionReading>? onReadingCaptured;
 
   @override
   State<BodyCompositionScreen> createState() => _BodyCompositionScreenState();
@@ -285,6 +287,26 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen>
     });
   }
 
+  BodyCompositionReading _readingFromWeightData(ICWeightData data) {
+    return BodyCompositionReading(
+      weight: data.weight_kg,
+      bmi: data.bmi,
+      bodyFat: data.bodyFatPercent,
+      muscleMass: data.musclePercent,
+      waterContent: data.moisturePercent,
+    );
+  }
+
+  void _useLatestReading() {
+    final ICWeightData? data = _lastData;
+    final ValueChanged<BodyCompositionReading>? callback = widget.onReadingCaptured;
+    if (data == null || callback == null) {
+      return;
+    }
+
+    callback(_readingFromWeightData(data));
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -328,6 +350,22 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen>
         const SizedBox(height: 24),
         if (_lastData != null) ...<Widget>[
           _WeightResultCard(data: _lastData!),
+          if (widget.onReadingCaptured != null) ...<Widget>[
+            const SizedBox(height: 12),
+            _BodyActionButton(
+              label: 'USE IN CHECK-IN',
+              icon: Icons.check_rounded,
+              foregroundColor: const Color(0xFF252525),
+              backgroundColor: const Color(0xFFB7FF00),
+              onTap: _lastData!.isStabilized
+                  ? _useLatestReading
+                  : () {
+                      setState(() {
+                        _status = 'Wait for a stable measurement before using this reading.';
+                      });
+                    },
+            ),
+          ],
           const SizedBox(height: 24),
         ],
         if (_devices.isNotEmpty) ...<Widget>[

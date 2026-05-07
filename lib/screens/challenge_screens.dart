@@ -616,3 +616,439 @@ class DetailScreen extends StatelessWidget {
     );
   }
 }
+
+class DailyCheckinScreen extends StatefulWidget {
+  const DailyCheckinScreen({
+    super.key,
+    required this.challenge,
+    required this.user,
+    required this.healthService,
+    required this.onBack,
+    required this.onSubmit,
+  });
+
+  final ChallengeSummary? challenge;
+  final AuthUser user;
+  final HealthService healthService;
+  final VoidCallback onBack;
+  final Future<void> Function(DailyProgressPayload payload) onSubmit;
+
+  @override
+  State<DailyCheckinScreen> createState() => _DailyCheckinScreenState();
+}
+
+class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
+  final TextEditingController _stepsController = TextEditingController();
+  final TextEditingController _distanceController = TextEditingController();
+  final TextEditingController _caloriesController = TextEditingController();
+  final TextEditingController _durationController = TextEditingController();
+  final TextEditingController _activeMinutesController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _bmiController = TextEditingController();
+  final TextEditingController _bodyFatController = TextEditingController();
+  final TextEditingController _muscleMassController = TextEditingController();
+  final TextEditingController _waterController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  int _exertion = 3;
+  bool _loadingSteps = false;
+  bool _submitting = false;
+  String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodaySteps();
+  }
+
+  @override
+  void dispose() {
+    _stepsController.dispose();
+    _distanceController.dispose();
+    _caloriesController.dispose();
+    _durationController.dispose();
+    _activeMinutesController.dispose();
+    _weightController.dispose();
+    _bmiController.dispose();
+    _bodyFatController.dispose();
+    _muscleMassController.dispose();
+    _waterController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTodaySteps() async {
+    setState(() {
+      _loadingSteps = true;
+      _message = 'Reading today\'s steps...';
+    });
+
+    try {
+      final int? steps = await widget.healthService.getTodaySteps();
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        if (steps != null) {
+          _stepsController.text = steps.toString();
+          _message = 'Loaded $steps steps from device health data.';
+        } else {
+          _message = 'Step data unavailable. You can enter it manually.';
+        }
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _message = 'Unable to read steps. You can enter them manually.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingSteps = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      _submitting = true;
+      _message = null;
+    });
+
+    try {
+      await widget.onSubmit(
+        DailyProgressPayload(
+          logDate: DateTime.now(),
+          steps: _intValue(_stepsController),
+          distanceKm: _doubleValue(_distanceController) ?? 0,
+          calories: _intValue(_caloriesController),
+          durationMinutes: _intValue(_durationController),
+          activeMinutes: _intValue(_activeMinutesController),
+          exertion: _exertion,
+          notes: _notesController.text.trim(),
+          weight: _doubleValue(_weightController),
+          bmi: _doubleValue(_bmiController),
+          bodyFat: _doubleValue(_bodyFatController),
+          muscleMass: _doubleValue(_muscleMassController),
+          waterContent: _doubleValue(_waterController),
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _message = 'Daily progress saved.';
+        });
+      }
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() {
+          _message = error.message;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _message = 'Unable to save progress: $error';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
+    }
+  }
+
+  int _intValue(TextEditingController controller) {
+    return int.tryParse(controller.text.trim()) ?? 0;
+  }
+
+  double? _doubleValue(TextEditingController controller) {
+    final String value = controller.text.trim();
+    if (value.isEmpty) {
+      return null;
+    }
+    return double.tryParse(value);
+  }
+
+  Future<void> _openBodyComposition() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+              child: BodyCompositionScreen(
+                user: widget.user,
+                onBack: () => Navigator.of(context).pop(),
+                onReadingCaptured: (BodyCompositionReading reading) {
+                  _weightController.text = reading.weight.toStringAsFixed(1);
+                  _bmiController.text = reading.bmi.toStringAsFixed(1);
+                  _bodyFatController.text = reading.bodyFat.toStringAsFixed(1);
+                  _muscleMassController.text = reading.muscleMass.toStringAsFixed(1);
+                  _waterController.text = reading.waterContent.toStringAsFixed(1);
+                  setState(() {
+                    _message = 'Body composition filled from scale reading.';
+                  });
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String title = widget.challenge?.name ?? 'Daily Check-in';
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool compact = constraints.maxWidth < 380;
+        final double horizontalPadding = compact ? 16 : 24;
+
+        return ListView(
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 28, horizontalPadding, 32),
+          children: <Widget>[
+            _ChallengeDetailTopBar(onBack: widget.onBack),
+            SizedBox(height: compact ? 22 : 26),
+            Text(
+              'DAILY CHECK-IN',
+              style: TextStyle(
+                color: const Color(0xFFB7FF00),
+                fontSize: compact ? 20 : 23,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w900,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: compact ? 24 : 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 22),
+            _DailyCheckinPanel(
+              title: 'ACTIVITY',
+              children: <Widget>[
+                _DailyMetricField(
+                  label: 'STEPS',
+                  controller: _stepsController,
+                  keyboardType: TextInputType.number,
+                  suffix: _loadingSteps
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFB7FF00),
+                          ),
+                        )
+                      : IconButton(
+                          onPressed: _loadTodaySteps,
+                          icon: const Icon(Icons.sync_rounded, color: Color(0xFFB7FF00)),
+                        ),
+                ),
+                _DailyMetricField(label: 'DISTANCE KM', controller: _distanceController),
+                _DailyMetricField(
+                  label: 'CALORIES',
+                  controller: _caloriesController,
+                  keyboardType: TextInputType.number,
+                ),
+                _DailyMetricField(
+                  label: 'DURATION MIN',
+                  controller: _durationController,
+                  keyboardType: TextInputType.number,
+                ),
+                _DailyMetricField(
+                  label: 'ACTIVE MIN',
+                  controller: _activeMinutesController,
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _DailyCheckinPanel(
+              title: 'BODY METRICS',
+              children: <Widget>[
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: const Color(0xFFB7FF00),
+                      foregroundColor: const Color(0xFF252525),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    onPressed: _openBodyComposition,
+                    icon: const Icon(Icons.monitor_weight_outlined, size: 19),
+                    label: const Text(
+                      'CONNECT SCALE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _DailyMetricField(label: 'WEIGHT KG', controller: _weightController),
+                _DailyMetricField(label: 'BMI', controller: _bmiController),
+                _DailyMetricField(label: 'BODY FAT %', controller: _bodyFatController),
+                _DailyMetricField(label: 'MUSCLE MASS', controller: _muscleMassController),
+                _DailyMetricField(label: 'WATER %', controller: _waterController),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _DailyCheckinPanel(
+              title: 'EFFORT',
+              children: <Widget>[
+                Slider(
+                  value: _exertion.toDouble(),
+                  min: 1,
+                  max: 5,
+                  divisions: 4,
+                  activeColor: const Color(0xFFB7FF00),
+                  inactiveColor: const Color(0xFF2A2A2A),
+                  label: '$_exertion',
+                  onChanged: (double value) {
+                    setState(() {
+                      _exertion = value.round();
+                    });
+                  },
+                ),
+                _DailyMetricField(
+                  label: 'NOTES',
+                  controller: _notesController,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 4,
+                ),
+              ],
+            ),
+            if (_message != null) ...<Widget>[
+              const SizedBox(height: 14),
+              Text(
+                _message!,
+                style: const TextStyle(
+                  color: Color(0xFFA4A4A4),
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 18),
+            _ChallengeDetailPrimaryButton(
+              label: _submitting ? 'SAVING...' : 'SAVE TODAY',
+              onTap: _submitting ? () {} : _submit,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DailyCheckinPanel extends StatelessWidget {
+  const _DailyCheckinPanel({
+    required this.title,
+    required this.children,
+  });
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F1F1F),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFB7FF00),
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _DailyMetricField extends StatelessWidget {
+  const _DailyMetricField({
+    required this.label,
+    required this.controller,
+    this.keyboardType = const TextInputType.numberWithOptions(decimal: true),
+    this.maxLines = 1,
+    this.suffix,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final TextInputType keyboardType;
+  final int maxLines;
+  final Widget? suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            color: Color(0xFFA4A4A4),
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+          suffixIcon: suffix,
+          filled: true,
+          fillColor: const Color(0xFF2A2A2A),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFB7FF00)),
+          ),
+        ),
+      ),
+    );
+  }
+}
