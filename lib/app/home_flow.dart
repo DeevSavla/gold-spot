@@ -495,9 +495,8 @@ class _HomeFlowState extends State<HomeFlow> {
     switch (currentScreen) {
       case AppScreen.onboarding:
         return MarketingScreen(
-          title: 'Train with structure. Compete with purpose.',
-          subtitle:
-              'Bring your React Native home flow into Flutter with role-based journeys for athletes and trainers.',
+          title: 'Own your grind.',
+          subtitle: 'Join challenges, track your progress, and train with people who keep you moving.',
           startupError: widget.startupError,
           primaryLabel: 'Get Started',
           secondaryLabel: 'Login',
