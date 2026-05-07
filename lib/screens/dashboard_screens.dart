@@ -110,6 +110,8 @@ class TrainerDashboardScreen extends StatelessWidget {
             children: <Widget>[
               _DashboardHeroHeader(name: user.name),
               SizedBox(height: compact ? 22 : 26),
+              _TrainerCreateChallengeCard(onTap: onCreateChallenge),
+              SizedBox(height: compact ? 20 : 24),
               const _DashboardSectionTitle(title: 'YOUR CHALLENGES'),
               const SizedBox(height: 12),
               if (isChallengesLoading)
@@ -203,8 +205,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 }),
               SizedBox(height: compact ? 20 : 24),
               HealthStepsCard(healthService: widget.healthService),
-              SizedBox(height: compact ? 20 : 24),
-              _DashboardBodyCompositionCard(onTap: widget.onOpenBodyComposition),
             ],
           ),
         );
@@ -635,8 +635,8 @@ class _DashboardEmptyChallengeCard extends StatelessWidget {
   }
 }
 
-class _DashboardBodyCompositionCard extends StatelessWidget {
-  const _DashboardBodyCompositionCard({required this.onTap});
+class _TrainerCreateChallengeCard extends StatelessWidget {
+  const _TrainerCreateChallengeCard({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -655,14 +655,14 @@ class _DashboardBodyCompositionCard extends StatelessWidget {
           ),
           child: const Row(
             children: <Widget>[
-              _DashboardActionIcon(icon: Icons.monitor_weight_outlined),
+              _DashboardActionIcon(icon: Icons.add_circle_outline_rounded),
               SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'BODY COMPOSITION',
+                      'CREATE CHALLENGE',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -671,7 +671,7 @@ class _DashboardBodyCompositionCard extends StatelessWidget {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Connect your scale and capture body metrics.',
+                      'Publish a new plan and share its join code.',
                       style: TextStyle(
                         color: Color(0xFFA4A4A4),
                         fontSize: 13,

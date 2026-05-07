@@ -22,10 +22,6 @@ function parseNumber(value, fallback = 0) {
 function buildActivityPayload(rawActivity = {}) {
   return {
     steps: Math.max(0, Math.round(parseNumber(rawActivity.steps))),
-    distanceKm: Math.max(0, parseNumber(rawActivity.distanceKm)),
-    calories: Math.max(0, Math.round(parseNumber(rawActivity.calories))),
-    durationMinutes: Math.max(0, Math.round(parseNumber(rawActivity.durationMinutes))),
-    activeMinutes: Math.max(0, Math.round(parseNumber(rawActivity.activeMinutes))),
   };
 }
 
@@ -43,8 +39,17 @@ function buildBodyMetricsPayload(rawBodyMetrics = {}) {
     weight: optionalMetric(rawBodyMetrics.weight),
     bmi: optionalMetric(rawBodyMetrics.bmi),
     bodyFat: optionalMetric(rawBodyMetrics.bodyFat),
+    subcutaneousFat: optionalMetric(rawBodyMetrics.subcutaneousFat),
+    visceralFat: optionalMetric(rawBodyMetrics.visceralFat),
     muscleMass: optionalMetric(rawBodyMetrics.muscleMass),
+    skeletalMuscle: optionalMetric(rawBodyMetrics.skeletalMuscle),
+    muscleRate: optionalMetric(rawBodyMetrics.muscleRate),
     waterContent: optionalMetric(rawBodyMetrics.waterContent),
+    protein: optionalMetric(rawBodyMetrics.protein),
+    bmr: optionalMetric(rawBodyMetrics.bmr),
+    boneMass: optionalMetric(rawBodyMetrics.boneMass),
+    physicalAge: optionalMetric(rawBodyMetrics.physicalAge),
+    bodyScore: optionalMetric(rawBodyMetrics.bodyScore),
   };
 
   return Object.fromEntries(

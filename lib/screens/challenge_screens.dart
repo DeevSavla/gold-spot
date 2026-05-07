@@ -639,15 +639,20 @@ class DailyCheckinScreen extends StatefulWidget {
 
 class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
   final TextEditingController _stepsController = TextEditingController();
-  final TextEditingController _distanceController = TextEditingController();
-  final TextEditingController _caloriesController = TextEditingController();
-  final TextEditingController _durationController = TextEditingController();
-  final TextEditingController _activeMinutesController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _bmiController = TextEditingController();
   final TextEditingController _bodyFatController = TextEditingController();
+  final TextEditingController _subcutaneousFatController = TextEditingController();
+  final TextEditingController _visceralFatController = TextEditingController();
   final TextEditingController _muscleMassController = TextEditingController();
+  final TextEditingController _skeletalMuscleController = TextEditingController();
+  final TextEditingController _muscleRateController = TextEditingController();
   final TextEditingController _waterController = TextEditingController();
+  final TextEditingController _proteinController = TextEditingController();
+  final TextEditingController _bmrController = TextEditingController();
+  final TextEditingController _boneMassController = TextEditingController();
+  final TextEditingController _physicalAgeController = TextEditingController();
+  final TextEditingController _bodyScoreController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   int _exertion = 3;
@@ -664,15 +669,20 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
   @override
   void dispose() {
     _stepsController.dispose();
-    _distanceController.dispose();
-    _caloriesController.dispose();
-    _durationController.dispose();
-    _activeMinutesController.dispose();
     _weightController.dispose();
     _bmiController.dispose();
     _bodyFatController.dispose();
+    _subcutaneousFatController.dispose();
+    _visceralFatController.dispose();
     _muscleMassController.dispose();
+    _skeletalMuscleController.dispose();
+    _muscleRateController.dispose();
     _waterController.dispose();
+    _proteinController.dispose();
+    _bmrController.dispose();
+    _boneMassController.dispose();
+    _physicalAgeController.dispose();
+    _bodyScoreController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -680,21 +690,21 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
   Future<void> _loadTodaySteps() async {
     setState(() {
       _loadingSteps = true;
-      _message = 'Reading today\'s steps...';
+      _message = 'Reading today\'s activity...';
     });
 
     try {
-      final int? steps = await widget.healthService.getTodaySteps();
+      final DailyActivitySummary? summary = await widget.healthService.getTodayActivitySummary();
       if (!mounted) {
         return;
       }
 
       setState(() {
-        if (steps != null) {
-          _stepsController.text = steps.toString();
-          _message = 'Loaded $steps steps from device health data.';
+        if (summary != null) {
+          _stepsController.text = summary.steps.toString();
+          _message = 'Loaded today\'s activity from Health Connect.';
         } else {
-          _message = 'Step data unavailable. You can enter it manually.';
+          _message = 'Activity data unavailable. You can enter it manually.';
         }
       });
     } catch (error) {
@@ -703,7 +713,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
       }
 
       setState(() {
-        _message = 'Unable to read steps. You can enter them manually.';
+        _message = 'Unable to read activity. You can enter it manually.';
       });
     } finally {
       if (mounted) {
@@ -725,17 +735,22 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
         DailyProgressPayload(
           logDate: DateTime.now(),
           steps: _intValue(_stepsController),
-          distanceKm: _doubleValue(_distanceController) ?? 0,
-          calories: _intValue(_caloriesController),
-          durationMinutes: _intValue(_durationController),
-          activeMinutes: _intValue(_activeMinutesController),
           exertion: _exertion,
           notes: _notesController.text.trim(),
           weight: _doubleValue(_weightController),
           bmi: _doubleValue(_bmiController),
           bodyFat: _doubleValue(_bodyFatController),
+          subcutaneousFat: _doubleValue(_subcutaneousFatController),
+          visceralFat: _doubleValue(_visceralFatController),
           muscleMass: _doubleValue(_muscleMassController),
+          skeletalMuscle: _doubleValue(_skeletalMuscleController),
+          muscleRate: _doubleValue(_muscleRateController),
           waterContent: _doubleValue(_waterController),
+          protein: _doubleValue(_proteinController),
+          bmr: _doubleValue(_bmrController),
+          boneMass: _doubleValue(_boneMassController),
+          physicalAge: _doubleValue(_physicalAgeController),
+          bodyScore: _doubleValue(_bodyScoreController),
         ),
       );
 
@@ -791,8 +806,17 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                   _weightController.text = reading.weight.toStringAsFixed(1);
                   _bmiController.text = reading.bmi.toStringAsFixed(1);
                   _bodyFatController.text = reading.bodyFat.toStringAsFixed(1);
+                  _subcutaneousFatController.text = reading.subcutaneousFat.toStringAsFixed(1);
+                  _visceralFatController.text = reading.visceralFat.toStringAsFixed(1);
                   _muscleMassController.text = reading.muscleMass.toStringAsFixed(1);
+                  _skeletalMuscleController.text = reading.skeletalMuscle.toStringAsFixed(1);
+                  _muscleRateController.text = reading.muscleRate.toStringAsFixed(1);
                   _waterController.text = reading.waterContent.toStringAsFixed(1);
+                  _proteinController.text = reading.protein.toStringAsFixed(1);
+                  _bmrController.text = reading.bmr.toStringAsFixed(0);
+                  _boneMassController.text = reading.boneMass.toStringAsFixed(1);
+                  _physicalAgeController.text = reading.physicalAge.toStringAsFixed(0);
+                  _bodyScoreController.text = reading.bodyScore.toStringAsFixed(1);
                   setState(() {
                     _message = 'Body composition filled from scale reading.';
                   });
@@ -861,22 +885,6 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                           icon: const Icon(Icons.sync_rounded, color: Color(0xFFB7FF00)),
                         ),
                 ),
-                _DailyMetricField(label: 'DISTANCE KM', controller: _distanceController),
-                _DailyMetricField(
-                  label: 'CALORIES',
-                  controller: _caloriesController,
-                  keyboardType: TextInputType.number,
-                ),
-                _DailyMetricField(
-                  label: 'DURATION MIN',
-                  controller: _durationController,
-                  keyboardType: TextInputType.number,
-                ),
-                _DailyMetricField(
-                  label: 'ACTIVE MIN',
-                  controller: _activeMinutesController,
-                  keyboardType: TextInputType.number,
-                ),
               ],
             ),
             const SizedBox(height: 18),
@@ -911,8 +919,23 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
                 _DailyMetricField(label: 'WEIGHT KG', controller: _weightController),
                 _DailyMetricField(label: 'BMI', controller: _bmiController),
                 _DailyMetricField(label: 'BODY FAT %', controller: _bodyFatController),
+                _DailyMetricField(
+                  label: 'SUBCUTANEOUS FAT %',
+                  controller: _subcutaneousFatController,
+                ),
+                _DailyMetricField(label: 'VISCERAL FAT', controller: _visceralFatController),
                 _DailyMetricField(label: 'MUSCLE MASS', controller: _muscleMassController),
+                _DailyMetricField(
+                  label: 'SKELETAL MUSCLE %',
+                  controller: _skeletalMuscleController,
+                ),
+                _DailyMetricField(label: 'MUSCLE RATE %', controller: _muscleRateController),
                 _DailyMetricField(label: 'WATER %', controller: _waterController),
+                _DailyMetricField(label: 'PROTEIN %', controller: _proteinController),
+                _DailyMetricField(label: 'BMR KCAL', controller: _bmrController),
+                _DailyMetricField(label: 'BONE MASS KG', controller: _boneMassController),
+                _DailyMetricField(label: 'PHYSICAL AGE', controller: _physicalAgeController),
+                _DailyMetricField(label: 'BODY SCORE', controller: _bodyScoreController),
               ],
             ),
             const SizedBox(height: 18),

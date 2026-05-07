@@ -292,8 +292,17 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen>
       weight: data.weight_kg,
       bmi: data.bmi,
       bodyFat: data.bodyFatPercent,
+      subcutaneousFat: data.subcutaneousFatPercent,
+      visceralFat: data.visceralFat,
       muscleMass: data.musclePercent,
+      skeletalMuscle: data.smPercent,
+      muscleRate: data.musclePercent,
       waterContent: data.moisturePercent,
+      protein: data.proteinPercent,
+      bmr: data.bmr.toDouble(),
+      boneMass: data.boneMass,
+      physicalAge: data.physicalAge,
+      bodyScore: data.bodyScore,
     );
   }
 
@@ -787,8 +796,15 @@ class _WeightResultCard extends StatelessWidget {
     final List<Widget> rows = <Widget>[
       _MetricTile(label: 'BMI', value: data.bmi.toStringAsFixed(1)),
       _MetricTile(label: 'BODY FAT', value: '${data.bodyFatPercent.toStringAsFixed(1)}%'),
-      _MetricTile(label: 'MUSCLE', value: '${data.musclePercent.toStringAsFixed(1)}%'),
+      _MetricTile(
+        label: 'SUBCUTANEOUS',
+        value: '${data.subcutaneousFatPercent.toStringAsFixed(1)}%',
+      ),
+      _MetricTile(label: 'VISCERAL FAT', value: data.visceralFat.toStringAsFixed(1)),
       _MetricTile(label: 'WATER', value: '${data.moisturePercent.toStringAsFixed(1)}%'),
+      _MetricTile(label: 'SKELETAL MUSCLE', value: '${data.smPercent.toStringAsFixed(1)}%'),
+      _MetricTile(label: 'PROTEIN', value: '${data.proteinPercent.toStringAsFixed(1)}%'),
+      _MetricTile(label: 'MUSCLE RATE', value: '${data.musclePercent.toStringAsFixed(1)}%'),
       _MetricTile(label: 'BMR', value: '${data.bmr}', suffix: 'KCAL'),
     ];
 

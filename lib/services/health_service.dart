@@ -31,7 +31,7 @@ class HealthService {
   }
 
   Future<int?> getTodaySteps() async {
-    if (!await _ensureStepPermissions()) {
+    if (!await _ensureActivityPermissions()) {
       return null;
     }
 
@@ -41,7 +41,7 @@ class HealthService {
   }
 
   Future<List<HourlyStepCount>?> getTodayHourlySteps() async {
-    if (!await _ensureStepPermissions()) {
+    if (!await _ensureActivityPermissions()) {
       return null;
     }
 
@@ -66,7 +66,21 @@ class HealthService {
     return hourlySteps;
   }
 
-  Future<bool> _ensureStepPermissions() async {
+  Future<DailyActivitySummary?> getTodayActivitySummary() async {
+    if (!await _ensureActivityPermissions()) {
+      return null;
+    }
+
+    final DateTime now = DateTime.now();
+    final DateTime midnight = DateTime(now.year, now.month, now.day);
+    final int steps = await _health.getTotalStepsInInterval(midnight, now) ?? 0;
+
+    return DailyActivitySummary(
+      steps: steps,
+    );
+  }
+
+  Future<bool> _ensureActivityPermissions() async {
     await _configure();
 
     if (!await _requestActivityRecognition()) {
@@ -89,6 +103,14 @@ class HealthService {
     final PermissionStatus status = await Permission.activityRecognition.request();
     return status.isGranted || status.isLimited;
   }
+}
+
+class DailyActivitySummary {
+  const DailyActivitySummary({
+    required this.steps,
+  });
+
+  final int steps;
 }
 
 class HourlyStepCount {

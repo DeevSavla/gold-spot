@@ -138,32 +138,42 @@ class DailyProgressPayload {
   const DailyProgressPayload({
     required this.logDate,
     required this.steps,
-    required this.distanceKm,
-    required this.calories,
-    required this.durationMinutes,
-    required this.activeMinutes,
     required this.exertion,
     required this.notes,
     this.weight,
     this.bmi,
     this.bodyFat,
+    this.subcutaneousFat,
+    this.visceralFat,
     this.muscleMass,
+    this.skeletalMuscle,
+    this.muscleRate,
     this.waterContent,
+    this.protein,
+    this.bmr,
+    this.boneMass,
+    this.physicalAge,
+    this.bodyScore,
   });
 
   final DateTime logDate;
   final int steps;
-  final double distanceKm;
-  final int calories;
-  final int durationMinutes;
-  final int activeMinutes;
   final int exertion;
   final String notes;
   final double? weight;
   final double? bmi;
   final double? bodyFat;
+  final double? subcutaneousFat;
+  final double? visceralFat;
   final double? muscleMass;
+  final double? skeletalMuscle;
+  final double? muscleRate;
   final double? waterContent;
+  final double? protein;
+  final double? bmr;
+  final double? boneMass;
+  final double? physicalAge;
+  final double? bodyScore;
 }
 
 class BodyCompositionReading {
@@ -171,15 +181,33 @@ class BodyCompositionReading {
     required this.weight,
     required this.bmi,
     required this.bodyFat,
+    required this.subcutaneousFat,
+    required this.visceralFat,
     required this.muscleMass,
+    required this.skeletalMuscle,
+    required this.muscleRate,
     required this.waterContent,
+    required this.protein,
+    required this.bmr,
+    required this.boneMass,
+    required this.physicalAge,
+    required this.bodyScore,
   });
 
   final double weight;
   final double bmi;
   final double bodyFat;
+  final double subcutaneousFat;
+  final double visceralFat;
   final double muscleMass;
+  final double skeletalMuscle;
+  final double muscleRate;
   final double waterContent;
+  final double protein;
+  final double bmr;
+  final double boneMass;
+  final double physicalAge;
+  final double bodyScore;
 }
 
 class ChallengeSummary {

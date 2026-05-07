@@ -25,34 +25,23 @@ const challengeProgressSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
-
-      distanceKm: {
-        type: Number,
-        default: 0,
-      },
-
-      calories: {
-        type: Number,
-        default: 0,
-      },
-
-      durationMinutes: {
-        type: Number,
-        default: 0,
-      },
-
-      activeMinutes: {
-        type: Number,
-        default: 0,
-      },
     },
 
     bodyMetrics: {
       weight: Number,
       bmi: Number,
       bodyFat: Number,
+      subcutaneousFat: Number,
+      visceralFat: Number,
       muscleMass: Number,
+      skeletalMuscle: Number,
+      muscleRate: Number,
       waterContent: Number,
+      protein: Number,
+      bmr: Number,
+      boneMass: Number,
+      physicalAge: Number,
+      bodyScore: Number,
     },
 
     exertion: {
