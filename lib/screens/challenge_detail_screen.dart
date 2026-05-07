@@ -8,6 +8,7 @@ class ChallengeDetailScreen extends StatelessWidget {
     required this.onLogProgress,
     required this.onBack,
     required this.showLogProgress,
+    required this.showActiveParticipants,
   });
 
   final ChallengeSummary? challenge;
@@ -15,6 +16,7 @@ class ChallengeDetailScreen extends StatelessWidget {
   final VoidCallback onLogProgress;
   final VoidCallback onBack;
   final bool showLogProgress;
+  final bool showActiveParticipants;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,12 @@ class ChallengeDetailScreen extends StatelessWidget {
               participants: participantText,
               category: category,
             ),
+            if (showActiveParticipants) ...<Widget>[
+              SizedBox(height: compact ? 20 : 24),
+              _ChallengeActiveParticipantsCard(
+                participants: challenge?.activeParticipants ?? const <ChallengeParticipant>[],
+              ),
+            ],
             SizedBox(height: compact ? 24 : 28),
             if (showLogProgress)
               _ChallengeDetailPrimaryButton(
@@ -59,6 +67,90 @@ class ChallengeDetailScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _ChallengeActiveParticipantsCard extends StatelessWidget {
+  const _ChallengeActiveParticipantsCard({required this.participants});
+
+  final List<ChallengeParticipant> participants;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<ChallengeParticipant> visibleParticipants = participants
+        .where((ChallengeParticipant participant) => participant.name.trim().isNotEmpty)
+        .toList();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F1F1F),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'ACTIVE PARTICIPANTS',
+            style: TextStyle(
+              color: Color(0xFFB7FF00),
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (visibleParticipants.isEmpty)
+            const Text(
+              'No active participants yet.',
+              style: TextStyle(
+                color: Color(0xFFA4A4A4),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          else
+            ...visibleParticipants.map((ChallengeParticipant participant) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 34,
+                      height: 34,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2A2A2A),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        participant.name.trim().substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          color: Color(0xFFB7FF00),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        participant.name.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 }

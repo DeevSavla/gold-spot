@@ -9,7 +9,6 @@ enum AppScreen {
   profile,
   profileEdit,
   challengeDetails,
-  challengeView,
   leaderboard,
   createChallenge,
   dailyCheckin,
@@ -145,6 +144,7 @@ class ChallengeSummary {
     required this.creatorId,
     required this.joinCode,
     required this.participants,
+    this.activeParticipants = const <ChallengeParticipant>[],
   });
 
   final String id;
@@ -155,4 +155,15 @@ class ChallengeSummary {
   final String creatorId;
   final String joinCode;
   final List<String> participants;
+  final List<ChallengeParticipant> activeParticipants;
+}
+
+class ChallengeParticipant {
+  const ChallengeParticipant({
+    required this.id,
+    required this.name,
+  });
+
+  final String id;
+  final String name;
 }

@@ -18,6 +18,10 @@ export function serializeUser(user) {
 }
 
 export function serializeChallenge(challenge) {
+  const participantUsers = Array.isArray(challenge.participantUsers)
+    ? challenge.participantUsers
+    : [];
+
   return {
     id: challenge.id,
     name: challenge.name,
@@ -27,6 +31,10 @@ export function serializeChallenge(challenge) {
     creatorId: challenge.creatorId,
     joinCode: challenge.joinCode,
     participants: challenge.participants ?? [],
+    activeParticipants: participantUsers.map((participant) => ({
+      id: participant.id,
+      name: participant.name,
+    })),
     completedUsers: challenge.completedUsers ?? [],
   };
 }

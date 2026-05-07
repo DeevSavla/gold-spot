@@ -54,7 +54,7 @@ const startServer = async () => {
     app.listen(PORT, HOST, () => {
       console.log(`Server running on http://${HOST}:${PORT}`);
       if (process.env.API_BASE_URL) {
-        console.log(`Advertised API base URL: ${process.env.API_BASE_URL}`);
+        console.log(`API base URL: ${process.env.API_BASE_URL}`);
       }
     });
   } catch (err) {

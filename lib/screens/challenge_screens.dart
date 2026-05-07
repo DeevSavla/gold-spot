@@ -1,43 +1,5 @@
 part of '../main.dart';
 
-class ChallengeViewScreen extends StatelessWidget {
-  const ChallengeViewScreen({
-    super.key,
-    required this.challengeId,
-    required this.trainerMode,
-    required this.onViewUserProgress,
-    required this.onOpenDetails,
-  });
-
-  final String challengeId;
-  final bool trainerMode;
-  final VoidCallback onViewUserProgress;
-  final VoidCallback onOpenDetails;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text('Challenge View', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 12),
-          const SizedBox(height: 16),
-          if (trainerMode) ...<Widget>[
-            _PrimaryButton(
-              label: 'View Athlete Progress',
-              onTap: onViewUserProgress,
-            ),
-            const SizedBox(height: 12),
-          ],
-          _SecondaryButton(label: 'Challenge Details', onTap: onOpenDetails),
-        ],
-      ),
-    );
-  }
-}
-
 class ChallengesScreen extends StatefulWidget {
   const ChallengesScreen({
     super.key,

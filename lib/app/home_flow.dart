@@ -51,6 +51,9 @@ class _HomeFlowState extends State<HomeFlow> {
   }
 
   ChallengeSummary _challengeFromResponse(Map<String, dynamic> data) {
+    final List<dynamic> rawActiveParticipants =
+        (data['activeParticipants'] as List?) ?? <dynamic>[];
+
     return ChallengeSummary(
       id: data['id']?.toString() ?? '',
       name: data['name']?.toString() ?? '',
@@ -61,6 +64,17 @@ class _HomeFlowState extends State<HomeFlow> {
       joinCode: data['joinCode']?.toString() ?? '',
       participants: ((data['participants'] as List?) ?? <dynamic>[])
           .map((dynamic value) => value.toString())
+          .toList(),
+      activeParticipants: rawActiveParticipants
+          .whereType<Map>()
+          .map((Map<dynamic, dynamic> value) {
+            final Map<String, dynamic> participant = value.cast<String, dynamic>();
+            return ChallengeParticipant(
+              id: participant['id']?.toString() ?? '',
+              name: participant['name']?.toString() ?? 'Unnamed participant',
+            );
+          })
+          .where((ChallengeParticipant participant) => participant.id.isNotEmpty)
           .toList(),
     );
   }
@@ -127,7 +141,7 @@ class _HomeFlowState extends State<HomeFlow> {
   void viewChallenge(String id) {
     setState(() {
       activeChallengeId = id;
-      currentScreen = AppScreen.challengeView;
+      currentScreen = AppScreen.challengeDetails;
     });
     _guardRoute();
   }
@@ -549,14 +563,7 @@ class _HomeFlowState extends State<HomeFlow> {
             user?.role == AuthRole.trainer ? AppScreen.trainerDashboard : AppScreen.dashboard,
           ),
           showLogProgress: user?.role != AuthRole.trainer,
-        );
-      case AppScreen.challengeView:
-        return ChallengeViewScreen(
-          challengeId: activeChallengeId ?? 'mobility-21',
-          trainerMode: user?.role == AuthRole.trainer,
-          onViewUserProgress: () =>
-              viewChallengeUserProgress(activeChallengeId ?? 'mobility-21', 'user-101'),
-          onOpenDetails: () => viewChallengeDetails(activeChallengeId ?? 'mobility-21'),
+          showActiveParticipants: user?.role == AuthRole.trainer,
         );
       case AppScreen.bodyComposition:
         return BodyCompositionScreen(
@@ -605,7 +612,7 @@ class _HomeFlowState extends State<HomeFlow> {
           subtitle:
               'Viewing ${activeChallengeUserId ?? 'user-101'} inside ${activeChallengeId ?? 'challenge'}.',
           actionLabel: 'Back to Challenge',
-          onAction: () => setScreen(AppScreen.challengeView),
+          onAction: () => viewChallengeDetails(activeChallengeId ?? 'mobility-21'),
         );
       case AppScreen.joinChallenge:
         return DetailScreen(

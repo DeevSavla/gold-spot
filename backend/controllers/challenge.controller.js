@@ -66,7 +66,9 @@ export async function createChallenge(req, res) {
 
 export async function listChallenges(_req, res) {
   try {
-    const challenges = await Challenge.find().sort({ createdAt: -1 });
+    const challenges = await Challenge.find()
+      .sort({ createdAt: -1 })
+      .populate('participantUsers', 'id name email');
     return res.status(200).json({
       challenges: challenges.map(serializeChallenge),
     });
@@ -107,6 +109,8 @@ export async function joinChallenge(req, res) {
       await challenge.save();
       await user.save();
     }
+
+    await challenge.populate('participantUsers', 'id name email');
 
     return res.status(200).json({
       message: alreadyJoined ? 'You already joined this challenge.' : 'Challenge joined successfully.',
