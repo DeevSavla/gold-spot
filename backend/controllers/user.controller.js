@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 
 import User from '../models/user.model.js';
 import { createToken, isBcryptHash } from '../utils/auth.js';
@@ -51,6 +52,7 @@ export async function signup(req, res) {
     const profile_pic = await uploadProfileImage(req.file, email);
 
     const newUser = await User.create({
+      id: randomUUID(),
       name,
       email,
       passwordHash: hashedPassword,
@@ -130,7 +132,7 @@ export async function login(req, res) {
 
 export async function updateProfile(req, res) {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ id: req.params.id });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -178,7 +180,7 @@ export async function updateProfile(req, res) {
 
 export async function uploadProfilePhoto(req, res) {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ id: req.params.id });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -202,7 +204,7 @@ export async function uploadProfilePhoto(req, res) {
 
 export async function deleteProfile(req, res) {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const deletedUser = await User.findOneAndDelete({ id: req.params.id });
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found.' });
     }

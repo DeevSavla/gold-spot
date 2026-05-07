@@ -11,8 +11,22 @@ const challengeProgressSchema = new mongoose.Schema(
     exertion: { type: Number, required: true, min: 1, max: 5 },
     notes: { type: String, default: '' },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
+
+challengeProgressSchema.virtual('challenge', {
+  ref: 'Challenge',
+  localField: 'challengeId',
+  foreignField: 'id',
+  justOne: true,
+});
+
+challengeProgressSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: 'id',
+  justOne: true,
+});
 
 const ChallengeProgress =
   mongoose.models.ChallengeProgress || mongoose.model('ChallengeProgress', challengeProgressSchema);

@@ -9,11 +9,30 @@ const challengeSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     creatorId: { type: String, required: true },
     joinCode: { type: String, required: true, unique: true },
-    participants: { type: [{ type: String }], default: null },
-    completedUsers: { type: [{ type: String }], default: null },
+    participants: { type: [{ type: String }], default: [] },
+    completedUsers: { type: [{ type: String }], default: [] },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
+
+challengeSchema.virtual('creator', {
+  ref: 'User',
+  localField: 'creatorId',
+  foreignField: 'id',
+  justOne: true,
+});
+
+challengeSchema.virtual('participantUsers', {
+  ref: 'User',
+  localField: 'participants',
+  foreignField: 'id',
+});
+
+challengeSchema.virtual('completedUserProfiles', {
+  ref: 'User',
+  localField: 'completedUsers',
+  foreignField: 'id',
+});
 
 const Challenge = mongoose.models.Challenge || mongoose.model('Challenge', challengeSchema);
 

@@ -1,6 +1,6 @@
 export function serializeUser(user) {
   return {
-    id: user._id.toString(),
+    id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,

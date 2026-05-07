@@ -27,7 +27,7 @@ export async function createChallengeProgress(req, res) {
 
     const [challenge, user] = await Promise.all([
       Challenge.findOne({ id: challengeId }),
-      User.findById(userId),
+      User.findOne({ id: userId }),
     ]);
 
     if (!challenge) {

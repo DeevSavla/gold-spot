@@ -29,7 +29,7 @@ export async function createChallenge(req, res) {
       return res.status(400).json({ message: 'Creator is required.' });
     }
 
-    const creator = await User.findById(creatorId);
+    const creator = await User.findOne({ id: creatorId });
     if (!creator) {
       return res.status(404).json({ message: 'Creator user not found.' });
     }
@@ -88,7 +88,7 @@ export async function joinChallenge(req, res) {
       return res.status(400).json({ message: 'User is required.' });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findOne({ id: userId });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
